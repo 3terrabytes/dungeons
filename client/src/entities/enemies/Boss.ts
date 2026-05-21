@@ -11,7 +11,7 @@ type BossState = 'idle' | 'telegraph' | 'burst' | 'charge' | 'cooldown';
  */
 export class Boss extends Enemy {
   private phase: BossState = 'idle';
-  private stateTimerMs = 1200;
+  private phaseTimerMs = 1200;
   private chargeDir = new Phaser.Math.Vector2(0, 0);
   private maxHp: number;
 
