@@ -15,7 +15,9 @@ export function requireAuth(req: AuthedRequest, res: Response, next: NextFunctio
   const token = (req.cookies as Record<string, string> | undefined)?.token;
   if (!token) { res.status(401).json({ error: 'Not signed in' }); return; }
   try {
-    const decoded = jwt.verify(token, SECRET) as { sub: number };
+    // We always sign with a numeric `sub`, but @types/jsonwebtoken types it as
+    // `string | undefined`, so the cast goes through `unknown` to satisfy TS.
+    const decoded = jwt.verify(token, SECRET) as unknown as { sub: number };
     req.userId = decoded.sub;
     next();
   } catch {
