@@ -68,7 +68,7 @@ export class DungeonScene extends Phaser.Scene {
     this.events.emit('stats:changed');
   }
 
-  update(time: number, delta: number): void {
+  override update(time: number, delta: number): void {
     if (!this.player.active) return;
 
     const { state, pointer } = this.input2.sample();

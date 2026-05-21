@@ -10,7 +10,7 @@ type BossState = 'idle' | 'telegraph' | 'burst' | 'charge' | 'cooldown';
  * Scales HP by floor depth.
  */
 export class Boss extends Enemy {
-  private state: BossState = 'idle';
+  private phase: BossState = 'idle';
   private stateTimerMs = 1200;
   private chargeDir = new Phaser.Math.Vector2(0, 0);
   private maxHp: number;
@@ -28,16 +28,16 @@ export class Boss extends Enemy {
     const player = this.getPlayer();
     if (!player) return;
 
-    this.stateTimerMs -= delta;
+    this.phaseTimerMs -= delta;
     const body = this.body as Phaser.Physics.Arcade.Body;
 
-    switch (this.state) {
+    switch (this.phase) {  // boss FSM
       case 'idle': {
         // Slowly approach
         const dx = player.x - this.x, dy = player.y - this.y;
         const d = Math.hypot(dx, dy) || 1;
         body.setVelocity((dx / d) * ENEMY.bossSpd, (dy / d) * ENEMY.bossSpd);
-        if (this.stateTimerMs <= 0) {
+        if (this.phaseTimerMs <= 0) {
           // Pick attack: charge if close, burst if far
           if (d < 180) this.enter('telegraph', 600, () => this.enter('charge', 500));
           else         this.enter('telegraph', 700, () => this.enter('burst', 100));
@@ -47,8 +47,8 @@ export class Boss extends Enemy {
       case 'telegraph': {
         body.setVelocity(0, 0);
         // Visual: blink
-        this.setTint(Math.floor(this.stateTimerMs / 100) % 2 === 0 ? 0xff4444 : 0xffffff);
-        if (this.stateTimerMs <= 0) this.advanceFromTelegraph();
+        this.setTint(Math.floor(this.phaseTimerMs / 100) % 2 === 0 ? 0xff4444 : 0xffffff);
+        if (this.phaseTimerMs <= 0) this.advanceFromTelegraph();
         break;
       }
       case 'charge': {
@@ -59,7 +59,7 @@ export class Boss extends Enemy {
           this.chargeDir.set(dx / d, dy / d);
           body.setVelocity(this.chargeDir.x * 320, this.chargeDir.y * 320);
         }
-        if (this.stateTimerMs <= 0) {
+        if (this.phaseTimerMs <= 0) {
           body.setVelocity(0, 0);
           this.enter('cooldown', 800);
         }
@@ -72,14 +72,14 @@ export class Boss extends Enemy {
       }
       case 'cooldown': {
         body.setVelocity(0, 0);
-        if (this.stateTimerMs <= 0) this.enter('idle', 1000);
+        if (this.phaseTimerMs <= 0) this.enter('idle', 1000);
         break;
       }
     }
 
     // Health-gate phase: under 50% HP, faster cooldowns
-    if (this.hp < this.maxHp * 0.5 && this.state === 'cooldown' && this.stateTimerMs > 400) {
-      this.stateTimerMs = 400;
+    if (this.hp < this.maxHp * 0.5 && this.phase === 'cooldown' && this.phaseTimerMs > 400) {
+      this.phaseTimerMs = 400;
     }
   }
 
@@ -89,8 +89,8 @@ export class Boss extends Enemy {
   }
 
   private enter(next: BossState, durMs: number, after?: () => void): void {
-    this.state = next;
-    this.stateTimerMs = durMs;
+    this.phase = next;
+    this.phaseTimerMs = durMs;
     if (after) {
       this.scene.time.delayedCall(durMs, after);
     }

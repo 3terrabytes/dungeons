@@ -11,7 +11,7 @@ interface ShopSceneData {
 }
 
 export class ShopScene extends Phaser.Scene {
-  private data!: ShopSceneData;
+  private sceneData!: ShopSceneData;
   private inventory!: Inventory;
   private goldText!: Phaser.GameObjects.Text;
   private cards: Phaser.GameObjects.Container[] = [];
@@ -19,7 +19,7 @@ export class ShopScene extends Phaser.Scene {
   constructor() { super('Shop'); }
 
   init(data: ShopSceneData): void {
-    this.data = data;
+    this.sceneData = data;
     this.inventory = new Inventory(data.inventorySnapshot);
   }
 
@@ -32,7 +32,7 @@ export class ShopScene extends Phaser.Scene {
       fontFamily: 'monospace', fontSize: '24px', color: '#f5d76e', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(width / 2, 58, `Floor ${this.data.floor} cleared. Spend before descending.`, {
+    this.add.text(width / 2, 58, `Floor ${this.sceneData.floor} cleared. Spend before descending.`, {
       fontFamily: 'monospace', fontSize: '12px', color: '#aaa',
     }).setOrigin(0.5);
 
@@ -115,16 +115,16 @@ export class ShopScene extends Phaser.Scene {
   }
 
   private tryBuy(item: BaseItem): void {
-    if (this.data.carryStats.gold < item.cost) {
+    if (this.sceneData.carryStats.gold < item.cost) {
       this.flashShake();
       return;
     }
-    this.data.carryStats.gold -= item.cost;
+    this.sceneData.carryStats.gold -= item.cost;
     this.inventory.acquire(item);
     if (item.type === 'boost' && item.effect) {
       // Permanent boosts also update save
-      if (item.effect.maxHp) this.data.save.permanentBoosts.maxHpBonus += item.effect.maxHp;
-      if (item.effect.atk)   this.data.save.permanentBoosts.atkBonus   += item.effect.atk;
+      if (item.effect.maxHp) this.sceneData.save.permanentBoosts.maxHpBonus += item.effect.maxHp;
+      if (item.effect.atk)   this.sceneData.save.permanentBoosts.atkBonus   += item.effect.atk;
     }
     this.refreshGold();
   }
@@ -134,15 +134,15 @@ export class ShopScene extends Phaser.Scene {
   }
 
   private refreshGold(): void {
-    this.goldText.setText(`${this.data.carryStats.gold} G`);
+    this.goldText.setText(`${this.sceneData.carryStats.gold} G`);
   }
 
   private async persistSave(): Promise<void> {
     if (this.registry.get('guest') === true) return;
     const updated: SaveData = {
-      ...this.data.save,
-      highestFloor: Math.max(this.data.save.highestFloor, this.data.floor),
-      totalGold: this.data.save.totalGold + this.data.carryStats.gold,
+      ...this.sceneData.save,
+      highestFloor: Math.max(this.sceneData.save.highestFloor, this.sceneData.floor),
+      totalGold: this.sceneData.save.totalGold + this.sceneData.carryStats.gold,
     };
     try { await api.putSave(updated); }
     catch { /* network is best-effort */ }
@@ -150,10 +150,10 @@ export class ShopScene extends Phaser.Scene {
 
   private descend(): void {
     this.scene.start('Dungeon', {
-      floor: this.data.floor + 1,
-      save: this.data.save,
+      floor: this.sceneData.floor + 1,
+      save: this.sceneData.save,
       inventorySnapshot: this.inventory.snapshot(),
-      carryStats: this.data.carryStats,
+      carryStats: this.sceneData.carryStats,
     });
   }
 }

@@ -93,7 +93,7 @@ export class Player extends Phaser.GameObjects.Container {
     layer.setTexture(tex);
   }
 
-  update(delta: number, input: InputState, pointer: Phaser.Input.Pointer): void {
+  override update(delta: number, input: InputState, pointer: Phaser.Input.Pointer): void {
     // 8-way normalised
     const vx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
     const vy = (input.down  ? 1 : 0) - (input.up   ? 1 : 0);
