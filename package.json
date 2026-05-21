@@ -1,0 +1,19 @@
+{
+  "name": "dungeons-v0.5",
+  "version": "0.5.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev -w api\" \"npm:dev -w web\"",
+    "build": "npm run build -w shared && npm run build -w api && npm run build -w web",
+    "migrate": "npm run migrate -w api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "typescript": "^5.6.3"
+  }
+}
